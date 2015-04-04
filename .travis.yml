@@ -1,0 +1,8 @@
+language: objective-c
+before_install:
+  - brew update
+  - brew outdated xctool || brew upgrade xctool
+  - gem install cocoapods --no-ri --no-rdoc
+podfile: TestTarget/Podfile
+script: xctool -workspace TestTarget/TestTarget.xcworkspace -scheme Test
+  Target -sdk iphonesimulator clean build test
