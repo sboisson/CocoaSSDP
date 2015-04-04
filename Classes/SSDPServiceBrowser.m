@@ -50,10 +50,8 @@ typedef enum : NSUInteger {
 } SSDPMessageType;
 
 
-@interface SSDPServiceBrowser () {
-    GCDAsyncUdpSocket *_socket;
-}
-
+@interface SSDPServiceBrowser ()
+@property (strong, nonatomic) GCDAsyncUdpSocket *socket;
 @end
 
 
@@ -78,20 +76,7 @@ typedef enum : NSUInteger {
 
 
 - (NSString *)_prepareSearchRequest {
-    NSString *userAgent = nil;
-    NSDictionary *bundleInfos = [[NSBundle mainBundle] infoDictionary];
-    NSString *bundleExecutable = bundleInfos[(__bridge NSString *)kCFBundleExecutableKey] ?: bundleInfos[(__bridge NSString *)kCFBundleIdentifierKey];
-#if defined(__IPHONE_OS_VERSION_MIN_REQUIRED)
-    userAgent = [NSString stringWithFormat:@"%@/%@ (%@; iOS %@) %@",
-                 bundleExecutable,
-                 (__bridge id)CFBundleGetValueForInfoDictionaryKey(CFBundleGetMainBundle(), kCFBundleVersionKey) ?: bundleInfos[(__bridge NSString *)kCFBundleVersionKey],
-                 [[UIDevice currentDevice] model],
-                 [[UIDevice currentDevice] systemVersion], SSDPVersionString];
-#elif defined(__MAC_OS_X_VERSION_MIN_REQUIRED)
-    userAgent = [NSString stringWithFormat:@"%@/%@ (Mac OS X %@) %@", bundleExecutable,
-                 bundleInfos[@"CFBundleShortVersionString"] ?: bundleInfos[(__bridge NSString *)kCFBundleVersionKey],
-                 [[NSProcessInfo processInfo] operatingSystemVersionString], SSDPVersionString];
-#endif
+    NSString *userAgent = [self _userAgentString];
 
     return [NSString stringWithFormat:@"M-SEARCH * HTTP/1.1\r\n"
             "HOST: %@:%d\r\n"
@@ -101,12 +86,33 @@ typedef enum : NSUInteger {
             "USER-AGENT: %@/1\r\n\r\n\r\n", SSDPMulticastGroupAddress, SSDPMulticastUDPPort, _serviceType, userAgent];
 }
 
+- (NSString *)_userAgentString {
+    NSString *userAgent = nil;
+    NSDictionary *bundleInfos = [[NSBundle mainBundle] infoDictionary];
+    NSString *bundleExecutable = bundleInfos[(__bridge NSString *)kCFBundleExecutableKey] ?: bundleInfos[(__bridge NSString *)kCFBundleIdentifierKey];
+    
+#if defined(__IPHONE_OS_VERSION_MIN_REQUIRED)
+    userAgent = [NSString stringWithFormat:@"%@/%@ (%@; iOS %@) %@",
+                 bundleExecutable,
+                 (__bridge id)CFBundleGetValueForInfoDictionaryKey(CFBundleGetMainBundle(), kCFBundleVersionKey) ?: bundleInfos[(__bridge NSString *)kCFBundleVersionKey],
+                 [[UIDevice currentDevice] model],
+                 [[UIDevice currentDevice] systemVersion], SSDPVersionString];
+    
+#elif defined(__MAC_OS_X_VERSION_MIN_REQUIRED)
+    userAgent = [NSString stringWithFormat:@"%@/%@ (Mac OS X %@) %@", bundleExecutable,
+                 bundleInfos[@"CFBundleShortVersionString"] ?: bundleInfos[(__bridge NSString *)kCFBundleVersionKey],
+                 [[NSProcessInfo processInfo] operatingSystemVersionString], SSDPVersionString];
+#endif
+    
+    return userAgent;
+}
+
 
 - (void)startBrowsingForServices {
     NSData *d = [[self _prepareSearchRequest] dataUsingEncoding:NSUTF8StringEncoding];
     
-    _socket = [[GCDAsyncUdpSocket alloc] initWithDelegate:self delegateQueue:dispatch_get_main_queue()];
-    [_socket setIPv6Enabled:NO];
+    // First call to _socket needs to be called by self for lazy instantiation
+    [self.socket setIPv6Enabled:NO];
     
     NSError *err = nil;
 
@@ -130,6 +136,18 @@ typedef enum : NSUInteger {
     }
 
     [_socket sendData:d toHost:SSDPMulticastGroupAddress port:SSDPMulticastUDPPort withTimeout:-1 tag:11];
+}
+
+- (GCDAsyncUdpSocket *)socket
+{
+    
+    if (_socket) {
+        return _socket;
+    }
+    
+    _socket = [[GCDAsyncUdpSocket alloc] initWithDelegate:self delegateQueue:dispatch_get_main_queue()];
+    
+    return _socket;
 }
 
 - (void)stopBrowsingForServices {
