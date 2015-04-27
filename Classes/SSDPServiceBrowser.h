@@ -97,8 +97,10 @@
 
 /**
  Start browsing for UPnP services matching the browsers service type.
+
+ @param serviceType The UPnP service type to search for.
  */
-- (void)startBrowsingForServices;
+- (void)startBrowsingForServices:(NSString *)serviceType;
 
 /**
  Stop browsing for UPnP services.

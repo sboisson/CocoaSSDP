@@ -75,7 +75,7 @@ typedef enum : NSUInteger {
 }
 
 
-- (NSString *)_prepareSearchRequest {
+- (NSString *)_prepareSearchRequestWithServiceType:(NSString *)serviceType {
     NSString *userAgent = [self _userAgentString];
 
     return [NSString stringWithFormat:@"M-SEARCH * HTTP/1.1\r\n"
@@ -83,7 +83,7 @@ typedef enum : NSUInteger {
             "MAN: \"ssdp:discover\"\r\n"
             "ST: %@\r\n"
             "MX: 3\r\n"
-            "USER-AGENT: %@/1\r\n\r\n\r\n", SSDPMulticastGroupAddress, SSDPMulticastUDPPort, _serviceType, userAgent];
+            "USER-AGENT: %@/1\r\n\r\n\r\n", SSDPMulticastGroupAddress, SSDPMulticastUDPPort, serviceType, userAgent];
 }
 
 - (NSString *)_userAgentString {
@@ -108,8 +108,10 @@ typedef enum : NSUInteger {
 }
 
 
-- (void)startBrowsingForServices {
-    NSData *d = [[self _prepareSearchRequest] dataUsingEncoding:NSUTF8StringEncoding];
+- (void)startBrowsingForServices:(NSString *)serviceType {
+    NSString *searchHeader;
+    searchHeader = [self _prepareSearchRequestWithServiceType:serviceType];
+    NSData *d = [searchHeader dataUsingEncoding:NSUTF8StringEncoding];
     
     // First call to _socket needs to be called by self for lazy instantiation
     [self.socket setIPv6Enabled:NO];

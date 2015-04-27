@@ -146,7 +146,7 @@
                                tag:11];
     
     // call
-    [browser startBrowsingForServices];
+    [browser startBrowsingForServices:@"ssdp:all"];
     
     // verify
     [_mockSocket verify];
