@@ -28,6 +28,8 @@ typedef void (^CallbackBlock)(id firstArgument, id secondArgument);
 
 @interface SSDPProtocolTestHelper : NSObject <SSDPServiceBrowserDelegate>
 
-@property (copy, nonatomic) CallbackBlock callbackBlock;
+@property (copy, nonatomic) CallbackBlock foundServiceBlock;
+@property (copy, nonatomic) CallbackBlock errorServiceBlock;
+@property (copy, nonatomic) CallbackBlock removeServiceBlock;
 
 @end

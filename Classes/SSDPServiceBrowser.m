@@ -178,16 +178,25 @@ typedef enum : NSUInteger {
       fromAddress:(NSData *)address withFilterContext:(id)filterContext
 {
     NSString *msg = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+    
     if( msg ) {
         NSDictionary *headers = [self _parseHeadersFromMessage:msg];
         SSDPService *service = [[SSDPService alloc] initWithHeaders:headers];
-        if( [[headers objectForKey:SSDPResponseStatusKey] isEqualToString:@"200"] ) {
+        
+        if( [headers[SSDPResponseStatusKey] isEqualToString:@"200"] ) {
             [self _notifyDelegateWithFoundService:service];
-        } else if ( [[headers objectForKey:SSDPRequestMethodKey] isEqualToString:@"NOTIFY"] ) {
-            [self _notifyDelegateWithFoundService:service];
+            
+        } else if ( [headers[SSDPRequestMethodKey] isEqualToString:@"NOTIFY"] ) {
+            NSString *nts = headers[@"nts"];
+            
+            if ( [nts isEqualToString:@"ssdp:alive"] ) {
+                [self _notifyDelegateWithFoundService:service];
+                
+            } else if ([nts isEqualToString:@"ssdp:byebye"]) {
+                [self _notifyDelegateWithRemovedService:service];
+            }
         }
-    }
-    else {
+    } else {
         NSString *host = nil;
         uint16_t port = 0;
         [GCDAsyncUdpSocket getHost:&host port:&port fromAddress:address];
@@ -252,6 +261,15 @@ typedef enum : NSUInteger {
     dispatch_async(dispatch_get_main_queue(), ^{
         @autoreleasepool {
             [_delegate ssdpBrowser:self didFindService:service];
+        }
+    });
+}
+
+- (void)_notifyDelegateWithRemovedService:(SSDPService *)service
+{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        @autoreleasepool {
+            [_delegate ssdpBrowser:self didRemoveService:service];
         }
     });
 }

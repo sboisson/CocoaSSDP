@@ -27,22 +27,22 @@
 
 - (void)ssdpBrowser:(SSDPServiceBrowser *)browser didFindService:(SSDPService *)service
 {
-    if (self.callbackBlock) {
-        self.callbackBlock(browser, service);
+    if (self.foundServiceBlock) {
+        self.foundServiceBlock(browser, service);
     }
 }
 
 - (void)ssdpBrowser:(SSDPServiceBrowser *)browser didNotStartBrowsingForServices:(NSError *)error
 {
-    if (self.callbackBlock) {
-        self.callbackBlock(browser, error);
+    if (self.errorServiceBlock) {
+        self.errorServiceBlock(browser, error);
     }
 }
 
 - (void)ssdpBrowser:(SSDPServiceBrowser *)browser didRemoveService:(SSDPService *)service
 {
-    if (self.callbackBlock) {
-        self.callbackBlock(browser, service);
+    if (self.removeServiceBlock) {
+        self.removeServiceBlock(browser, service);
     }
 }
 

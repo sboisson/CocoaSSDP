@@ -189,7 +189,7 @@
                                 @"usn" : @"exampleUSN" };
     
     // add a callback helper because the callback is sent with GCD
-    protocolHelper.callbackBlock = ^void (SSDPServiceBrowser *argBrowser, SSDPService *service) {
+    protocolHelper.foundServiceBlock = ^void (SSDPServiceBrowser *argBrowser, SSDPService *service) {
         
         // expectations
         XCTAssert([argBrowser isEqual:browser],
@@ -231,7 +231,7 @@
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 }
 
-- (void)testReceivingNotifyInformsDelegate
+- (void)testReceivingNotifyAliveInformsDelegate
 {
     NSDictionary *expected = @{ @"location" : @"exampleLocation",
                                 @"server" : @"exampleServer",
@@ -245,7 +245,7 @@
     XCTestExpectation *expectation = [self expectationWithDescription:desc];
     
     // add a callback helper because the callback is sent with GCD
-    protocolHelper.callbackBlock = ^void (SSDPServiceBrowser *argBrowser, SSDPService *service) {
+    protocolHelper.foundServiceBlock = ^void (SSDPServiceBrowser *argBrowser, SSDPService *service) {
         
         // expectations
         XCTAssert([argBrowser isEqual:browser],
@@ -255,7 +255,8 @@
         XCTAssert([service.location isEqual:url],
                   @"Service should have url location");
         
-        XCTAssertNil(service.serviceType);
+        XCTAssert([service.serviceType isEqualToString:expected[@"notifyTarget"]],
+                  @"Service should have a service type");
         
         XCTAssert([service.cacheControlTime isEqual:@1800],
                   @"Service should have cache control timeout");
@@ -290,6 +291,58 @@
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 }
 
+- (void)testReceivingNotifyByeByeInformsDelegate
+{
+    NSDictionary *expected = @{ @"host" : @"239.255.255.250:1900",
+                                @"notifyTarget" : @"exampleSearchTarget",
+                                @"usn" : @"exampleUSN" };
+    
+    SSDPServiceBrowser *browser = [[SSDPServiceBrowser alloc] init];
+    SSDPProtocolTestHelper *protocolHelper = [[SSDPProtocolTestHelper alloc] init];
+    browser.delegate = protocolHelper;
+    NSString *desc = @"recieving data informs delegate";
+    XCTestExpectation *expectation = [self expectationWithDescription:desc];
+    
+    // add a callback helper because the callback is sent with GCD
+    protocolHelper.removeServiceBlock = ^void (SSDPServiceBrowser *argBrowser, SSDPService *service) {
+        
+        // expectations
+        XCTAssert([argBrowser isEqual:browser],
+                  @"Protocol should pass browser instance");
+        
+        // host?
+        
+        XCTAssert([service.serviceType isEqualToString:expected[@"notifyTarget"]],
+                  @"Service should have a service type");
+        
+        XCTAssert([service.uniqueServiceName isEqualToString:expected[@"usn"]],
+                  @"Service should have unique service name");
+        
+        XCTAssertNil(service.server,
+                  @"Service should not have server string");
+        
+        XCTAssertNil(service.cacheControlTime,
+                  @"Service should not have cache control timeout");
+        
+        // inform that test has finished
+        [expectation fulfill];
+    };
+    
+    NSString *header = [NSString stringWithFormat:
+                        @"NOTIFY * HTTP/1.1\r\n"
+                        @"HOST: 239.255.255.250:1900\r\n"
+                        @"NT: %@\r\n"
+                        @"NTS: ssdp:byebye\r\n"
+                        @"USN: %@\r\n\r\n",
+                        expected[@"notifyTarget"],
+                        expected[@"usn"]];
+    
+    
+    NSData *data = [header dataUsingEncoding:NSUTF8StringEncoding];
+    [browser udpSocket:nil didReceiveData:data fromAddress:nil withFilterContext:nil];
+    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+}
+
 - (void)testSocketClosingInformsDelegateWithError
 {
     SSDPServiceBrowser *browser = [[SSDPServiceBrowser alloc] init];
@@ -298,7 +351,7 @@
     browser.delegate = protocolHelper;
     NSString *desc = @"informs delegate with error";
     XCTestExpectation *expectation = [self expectationWithDescription:desc];
-    protocolHelper.callbackBlock = ^void (SSDPServiceBrowser *argBrowser, NSError *error) {
+    protocolHelper.errorServiceBlock = ^void (SSDPServiceBrowser *argBrowser, NSError *error) {
         
         XCTAssert([argBrowser isEqual:browser], @"Browser should be passed to delegate");
         XCTAssert([error isEqual:fakeError], @"Socket error should be passed to delegate");
