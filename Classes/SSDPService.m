@@ -33,8 +33,25 @@
         _serviceType = [headers objectForKey:@"st"];
         _uniqueServiceName = [headers objectForKey:@"usn"];
         _server = [headers objectForKey:@"server"];
+        
+        NSString *cacheControl = [headers objectForKey:@"cache-control"];
+        if (cacheControl) {
+            _cacheControlTime = [self scanCacheControlTime:cacheControl];
+        }
     }
     return self;
+}
+
+- (NSNumber *)scanCacheControlTime:(NSString *)cacheControl
+{
+    NSScanner *scanner = [NSScanner scannerWithString:cacheControl];
+    NSCharacterSet *numbers = [NSCharacterSet decimalDigitCharacterSet];
+    [scanner scanUpToCharactersFromSet:numbers intoString:NULL];
+    
+    NSInteger cacheTime;
+    [scanner scanInteger:&cacheTime];
+    
+    return @(cacheTime);
 }
 
 

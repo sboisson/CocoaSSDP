@@ -50,6 +50,11 @@
 @property(readonly, nonatomic) NSString *server;
 
 /**
+ The services cache control max age
+ */
+@property(readonly, nonatomic) NSNumber *cacheControlTime;
+
+/**
  Intialize a new instance
 
  @param headers The headers returned by the SSDP search response

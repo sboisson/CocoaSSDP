@@ -197,16 +197,16 @@
         
         NSURL *url = [NSURL URLWithString:expected[@"location"]];
         XCTAssert([service.location isEqual:url],
-                  @"Protocol should pass service");
+                  @"Service should have url location");
         
         XCTAssert([service.serviceType isEqualToString:expected[@"searchTarget"]],
-                  @"Protocol should pass service");
+                  @"Service should have service type");
         
         XCTAssert([service.uniqueServiceName isEqualToString:expected[@"usn"]],
-                  @"Protocol should pass service");
+                  @"Service should have unique service name");
         
         XCTAssert([service.server isEqualToString:expected[@"server"]],
-                  @"Protocol should pass service");
+                  @"Service should have server string");
         
         // inform that test has finished
         [expectation fulfill];
@@ -225,6 +225,65 @@
                         expected[@"cacheControl"],
                         expected[@"searchTarget"],
                         expected[@"usn"]];
+    
+    NSData *data = [header dataUsingEncoding:NSUTF8StringEncoding];
+    [browser udpSocket:nil didReceiveData:data fromAddress:nil withFilterContext:nil];
+    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+}
+
+- (void)testReceivingNotifyInformsDelegate
+{
+    NSDictionary *expected = @{ @"location" : @"exampleLocation",
+                                @"server" : @"exampleServer",
+                                @"notifyTarget" : @"exampleSearchTarget",
+                                @"usn" : @"exampleUSN" };
+    
+    SSDPServiceBrowser *browser = [[SSDPServiceBrowser alloc] init];
+    SSDPProtocolTestHelper *protocolHelper = [[SSDPProtocolTestHelper alloc] init];
+    browser.delegate = protocolHelper;
+    NSString *desc = @"recieving data informs delegate";
+    XCTestExpectation *expectation = [self expectationWithDescription:desc];
+    
+    // add a callback helper because the callback is sent with GCD
+    protocolHelper.callbackBlock = ^void (SSDPServiceBrowser *argBrowser, SSDPService *service) {
+        
+        // expectations
+        XCTAssert([argBrowser isEqual:browser],
+                  @"Protocol should pass browser instance");
+        
+        NSURL *url = [NSURL URLWithString:expected[@"location"]];
+        XCTAssert([service.location isEqual:url],
+                  @"Service should have url location");
+        
+        XCTAssertNil(service.serviceType);
+        
+        XCTAssert([service.cacheControlTime isEqual:@1800],
+                  @"Service should have cache control timeout");
+        
+        XCTAssert([service.uniqueServiceName isEqualToString:expected[@"usn"]],
+                  @"Service should have unique service name");
+        
+        XCTAssert([service.server isEqualToString:expected[@"server"]],
+                  @"Service should have server string");
+        
+        // inform that test has finished
+        [expectation fulfill];
+    };
+    
+    NSString *header = [NSString stringWithFormat:
+                        @"NOTIFY * HTTP/1.1\r\n"
+                        @"HOST: 239.255.255.250:1900\r\n"
+                        @"CACHE-CONTROL: max-age = 1800\r\n"
+                        @"LOCATION: %@\r\n"
+                        @"NT: %@\r\n"
+                        @"NTS: ssdp:alive\r\n"
+                        @"SERVER: %@\r\n"
+                        @"USN: %@\r\n\r\n",
+                        expected[@"location"],
+                        expected[@"notifyTarget"],
+                        expected[@"server"],
+                        expected[@"usn"]];
+    
     
     NSData *data = [header dataUsingEncoding:NSUTF8StringEncoding];
     [browser udpSocket:nil didReceiveData:data fromAddress:nil withFilterContext:nil];

@@ -180,8 +180,10 @@ typedef enum : NSUInteger {
     NSString *msg = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
     if( msg ) {
         NSDictionary *headers = [self _parseHeadersFromMessage:msg];
-        if( [headers objectForKey:SSDPResponseStatusKey] ) {
-            SSDPService *service = [[SSDPService alloc] initWithHeaders:headers];
+        SSDPService *service = [[SSDPService alloc] initWithHeaders:headers];
+        if( [[headers objectForKey:SSDPResponseStatusKey] isEqualToString:@"200"] ) {
+            [self _notifyDelegateWithFoundService:service];
+        } else if ( [[headers objectForKey:SSDPRequestMethodKey] isEqualToString:@"NOTIFY"] ) {
             [self _notifyDelegateWithFoundService:service];
         }
     }
