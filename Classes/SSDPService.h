@@ -23,14 +23,40 @@
 
 #import <Foundation/Foundation.h>
 
+/**
+ A lightweight model class that describes an SSDP service, populated from headers
+ returned by an SSDP search
+ */
 @interface SSDPService : NSObject
 
+/**
+ The location of the service's description XML file
+ */
 @property(readonly, nonatomic) NSURL *location;
+
+/**
+ The UPnP service type of the device
+ */
 @property(readonly, nonatomic) NSString *serviceType;
+
+/**
+ The services unique service name
+ */
 @property(readonly, nonatomic) NSString *uniqueServiceName;
+
+/**
+ The server description
+ */
 @property(readonly, nonatomic) NSString *server;
 
-- (id)initWithHeaders:(NSDictionary *)headers;
+/**
+ Intialize a new instance
 
+ @param headers The headers returned by the SSDP search response
+
+ @return Returns a new `SSDPService` instance, populated from the headers
+ dictionary
+ */
+- (id)initWithHeaders:(NSDictionary *)headers;
 
 @end
