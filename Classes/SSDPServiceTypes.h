@@ -21,28 +21,114 @@
 //  THE SOFTWARE.
 //
 
-extern NSString *const SSDPServiceType_All; // ssdp:all
+///-----------------------------------------------------------------------------
+/// @name General Searches
+///-----------------------------------------------------------------------------
 
-extern NSString *const SSDPServiceType_UPnP_RootDevice; // upnp:rootdevice
+/**
+ A general search type which all devices should respond to: `ssdp:all`
+ */
+extern NSString *const SSDPServiceType_All;
 
-// UPnP Internet Gateway Device (IGD)
-extern NSString *const SSDPServiceType_UPnP_InternetGatewayDevice1;     // urn:schemas-upnp-org:device:InternetGatewayDevice:1
-extern NSString *const SSDPServiceType_UPnP_WANConnectionDevice1;       // urn:schemas-upnp-org:device:WANConnectionDevice:1
-extern NSString *const SSDPServiceType_UPnP_WANDevice1;                 // urn:schemas-upnp-org:device:WANDevice:1
-extern NSString *const SSDPServiceType_UPnP_WANCommonInterfaceConfig1;  // urn:schemas-upnp-org:service:WANCommonInterfaceConfig:1
-extern NSString *const SSDPServiceType_UPnP_WANIPConnection1;           // urn:schemas-upnp-org:service:WANIPConnection:1
-extern NSString *const SSDPServiceType_UPnP_Layer3Forwarding1;          // urn:schemas-upnp-org:service:Layer3Forwarding:1
+/**
+ Search target for UPnP Root Devices: `upnp:rootdevice`
+ */
+extern NSString *const SSDPServiceType_UPnP_RootDevice;
 
-// UPnP A/V profile
-extern NSString *const SSDPServiceType_UPnP_MediaServer1;           // urn:schemas-upnp-org:device:MediaServer:1
-extern NSString *const SSDPServiceType_UPnP_MediaRenderer1;         // urn:schemas-upnp-org:device:MediaRenderer:1
-extern NSString *const SSDPServiceType_UPnP_ContentDirectory1;      // urn:schemas-upnp-org:service:ContentDirectory:1
-extern NSString *const SSDPServiceType_UPnP_ConnectionManager1;     // urn:schemas-upnp-org:service:ConnectionManager:1
-extern NSString *const SSDPServiceType_UPnP_RenderingControl1;      // urn:schemas-upnp-org:service:RenderingControl:1
-extern NSString *const SSDPServiceType_UPnP_AVTransport1;           // urn:schemas-upnp-org:service:AVTransport:1
 
-// UPnP Microsoft A/V profile
-extern NSString *const SSDPServiceType_Microsoft_MediaReceiverRegistrar1;    // urn:microsoft.com:service:X_MS_MediaReceiverRegistrar:1
+///-----------------------------------------------------------------------------
+/// @name UPnP Internet Gateway Device (IGD)
+///-----------------------------------------------------------------------------
 
-// UPnP Sonos
-extern NSString *const SSDPServiceType_UPnP_SonosZonePlayer1;    // urn:schemas-upnp-org:device:ZonePlayer:1
+/**
+ Search target for Internet Gateway Devices:
+ `urn:schemas-upnp-org:device:InternetGatewayDevice:1`
+ */
+extern NSString *const SSDPServiceType_UPnP_InternetGatewayDevice1;
+
+/**
+ Search target for WAN Connection Devices:
+ `urn:schemas-upnp-org:device:WANConnectionDevice:1`
+ */
+extern NSString *const SSDPServiceType_UPnP_WANConnectionDevice1;
+
+/**
+ Search target for WAN Devices: `urn:schemas-upnp-org:device:WANDevice:1`
+ */
+extern NSString *const SSDPServiceType_UPnP_WANDevice1;
+
+/**
+ Search target for WAN Common Interface Config Services: 
+ `urn:schemas-upnp-org:service:WANCommonInterfaceConfig:1`
+ */
+extern NSString *const SSDPServiceType_UPnP_WANCommonInterfaceConfig1;
+
+/**
+ Search target for WAN IP Connection Services:
+ `urn:schemas-upnp-org:service:WANIPConnection:1`
+ */
+extern NSString *const SSDPServiceType_UPnP_WANIPConnection1;
+
+/**
+ Search target for Layer 3 Forwarding Services:
+ `urn:schemas-upnp-org:service:Layer3Forwarding:1`
+ */
+extern NSString *const SSDPServiceType_UPnP_Layer3Forwarding1;
+
+
+///-----------------------------------------------------------------------------
+/// @name UPnP A/V profile
+///-----------------------------------------------------------------------------
+
+/**
+ Search target for Media Server 1 Devices:
+ `urn:schemas-upnp-org:device:MediaServer:1`
+ */
+extern NSString *const SSDPServiceType_UPnP_MediaServer1;
+/**
+ Search target for Media Renderer 1 Devices:
+ `urn:schemas-upnp-org:device:MediaRenderer:1`
+ */
+extern NSString *const SSDPServiceType_UPnP_MediaRenderer1;
+/**
+ Search target for Content Directory 1 Services:
+ `urn:schemas-upnp-org:service:ContentDirectory:1`
+ */
+extern NSString *const SSDPServiceType_UPnP_ContentDirectory1;
+/**
+ Search target for Connection Manager Services:
+ `urn:schemas-upnp-org:service:ConnectionManager:1`
+ */
+extern NSString *const SSDPServiceType_UPnP_ConnectionManager1;
+/**
+ Search target for Rendering Control Services:
+ `urn:schemas-upnp-org:service:RenderingControl:1`
+ */
+extern NSString *const SSDPServiceType_UPnP_RenderingControl1;
+/**
+ Search target for AV Transport 1 Services:
+ `urn:schemas-upnp-org:service:AVTransport:1`
+ */
+extern NSString *const SSDPServiceType_UPnP_AVTransport1;
+
+
+///-----------------------------------------------------------------------------
+/// @name UPnP Microsoft A/V profile
+///-----------------------------------------------------------------------------
+
+/**
+ Search target for Media Receiver Registrar 1 Services:
+ `urn:microsoft.com:service:X_MS_MediaReceiverRegistrar:1`
+ */
+extern NSString *const SSDPServiceType_Microsoft_MediaReceiverRegistrar1;
+
+
+///-----------------------------------------------------------------------------
+/// @name Sonos
+///-----------------------------------------------------------------------------
+
+/**
+ Search target for Sonos Devices:
+ `urn:schemas-upnp-org:device:ZonePlayer:1`
+ */
+extern NSString *const SSDPServiceType_UPnP_SonosZonePlayer1;
