@@ -113,7 +113,11 @@ typedef enum : NSUInteger {
     searchHeader = [self _prepareSearchRequestWithServiceType:serviceType];
     NSData *d = [searchHeader dataUsingEncoding:NSUTF8StringEncoding];
 
-    [_socket sendData:d toHost:SSDPMulticastGroupAddress port:SSDPMulticastUDPPort withTimeout:-1 tag:11];
+    [_socket sendData:d
+               toHost:SSDPMulticastGroupAddress
+                 port:SSDPMulticastUDPPort
+          withTimeout:-1
+                  tag:11];
 }
 
 - (void)setupSocket
@@ -124,7 +128,7 @@ typedef enum : NSUInteger {
     NSError *err = nil;
 
     NSDictionary *interfaces = [SSDPServiceBrowser availableNetworkInterfaces];
-    NSData *sourceAddress = _networkInterface? [interfaces objectForKey:_networkInterface] : nil;
+    NSData *sourceAddress = _networkInterface? interfaces[_networkInterface] : nil;
     if( !sourceAddress ) sourceAddress = [[interfaces allValues] firstObject];
 
     if(![_socket bindToAddress:sourceAddress error:&err]) {
@@ -150,7 +154,8 @@ typedef enum : NSUInteger {
         return _socket;
     }
     
-    _socket = [[GCDAsyncUdpSocket alloc] initWithDelegate:self delegateQueue:dispatch_get_main_queue()];
+    _socket = [[GCDAsyncUdpSocket alloc]
+               initWithDelegate:self delegateQueue:dispatch_get_main_queue()];
     
     return _socket;
 }
@@ -208,9 +213,12 @@ typedef enum : NSUInteger {
 
 - (NSMutableDictionary *)_parseHeadersFromMessage:(NSString *)message {
     NSMutableDictionary *headers = [NSMutableDictionary dictionary];
-    NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"^([a-z0-9-]+): *(.+)$"
-                                                                           options:NSRegularExpressionCaseInsensitive|NSRegularExpressionAnchorsMatchLines
-                                                                             error:nil];
+    NSString *pattern = @"^([a-z0-9-]+): *(.+)$";
+    NSRegularExpression *regex = [NSRegularExpression
+                                  regularExpressionWithPattern:pattern
+                                  options:NSRegularExpressionCaseInsensitive|
+                                  NSRegularExpressionAnchorsMatchLines
+                                  error:nil];
 
     __block SSDPMessageType type = SSDPUnknownMessage;
     
@@ -234,13 +242,12 @@ typedef enum : NSUInteger {
             }
         }
         else {
-            [regex enumerateMatchesInString:line options:0 range:NSMakeRange(0, line.length)
-                                 usingBlock:^(NSTextCheckingResult *result, NSMatchingFlags flags, BOOL *stop) {
-                                     if( result.numberOfRanges == 3 ) {
-                                         [headers setObject:[line substringWithRange:[result rangeAtIndex:2]]
-                                                     forKey:[[line substringWithRange:[result rangeAtIndex:1]] lowercaseString]];
-                                     }
-                                 }];
+            [regex enumerateMatchesInString:line options:0 range:NSMakeRange(0, line.length) usingBlock:^(NSTextCheckingResult *result, NSMatchingFlags flags, BOOL *stop) {
+                if( result.numberOfRanges == 3 ) {
+                    [headers setObject:[line substringWithRange:[result rangeAtIndex:2]]
+                                forKey:[[line substringWithRange:[result rangeAtIndex:1]] lowercaseString]];
+                }
+            }];
         }
     }];
     return headers;
