@@ -62,40 +62,19 @@
     [_mockSocket stopMocking];
 }
 
-- (void)testInitialisationSetsServiceTypeAndInterface
+- (void)testInitialisationSetsInterface
 {
     // given
-    NSString *serviceType = @"serviceType";
     NSString *interface = @"interface";
     
     // when
     SSDPServiceBrowser *browser = [[SSDPServiceBrowser alloc]
-                                   initWithServiceType:serviceType
-                                   onInterface:interface];
+                                   initWithInterface:interface];
     
     // then
     XCTAssertNotNil(browser, @"Browser should not be nil");
-    XCTAssert([browser.serviceType isEqualToString:serviceType],
-              @"Browser should set service type");
     XCTAssert([browser.networkInterface isEqualToString:interface],
               @"Browser should set network interface");
-}
-
-- (void)testInitialisationSetsServiceType
-{
-    // given
-    NSString *serviceType = @"serviceType";
-    
-    // when
-    SSDPServiceBrowser *browser = [[SSDPServiceBrowser alloc]
-                                   initWithServiceType:serviceType];
-    
-    // then
-    XCTAssertNotNil(browser, @"Browser should not be nil");
-    XCTAssert([browser.serviceType isEqualToString:serviceType],
-              @"Browser should set service type");
-    XCTAssertNil(browser.networkInterface,
-                 @"Browser should not set network interface");
 }
 
 - (void)testInitialisationHasSaneDefaults
@@ -105,27 +84,26 @@
     
     // then
     XCTAssertNotNil(browser, @"Browser should not be nil");
-    XCTAssert([browser.serviceType isEqualToString:@"ssdp:all"],
-              @"Browser should set service type");
     XCTAssertNil(browser.networkInterface,
                  @"Browser should not set network interface");
 }
 
-- (void)testStartBrowsingForServicesSendsData
+- (void)testStartBrowsingForServicesSendsDataIfConnected
 {
     SSDPServiceBrowser *browser = [[SSDPServiceBrowser alloc] init];
     browser.socket = _mockSocket;
+    [[[_mockSocket stub] andReturnValue:@(YES)] isConnected];
     
-    // Stub methods to return success
-    [[[_mockSocket stub] andReturnValue:@(YES)]
+    // Reject setup methods
+    [[_mockSocket reject]
      bindToAddress:[OCMArg any]
      error:[OCMArg anyObjectRef]];
     
-    [[[_mockSocket stub] andReturnValue:@(YES)]
+    [[_mockSocket reject]
      joinMulticastGroup:[OCMArg any]
      error:[OCMArg anyObjectRef]];
     
-    [[[_mockSocket stub] andReturnValue:@(YES)]
+    [[_mockSocket reject]
      beginReceiving:[OCMArg anyObjectRef]];
     
     NSString *searchHeader = [NSString stringWithFormat:
@@ -144,6 +122,33 @@
                               port:1900
                        withTimeout:-1
                                tag:11];
+    
+    // call
+    [browser startBrowsingForServices:@"ssdp:all"];
+    
+    // verify
+    [_mockSocket verify];
+}
+
+- (void)testStartBrowsingForServicesSetsUpSocketIfNotConnected
+{
+    SSDPServiceBrowser *browser = [[SSDPServiceBrowser alloc] init];
+    browser.socket = _mockSocket;
+    
+    [[[_mockSocket expect] andReturnValue:@(NO)] isConnected];
+    
+    // Stub methods to return success
+    [[[_mockSocket expect] andReturnValue:@(YES)]
+     bindToAddress:[OCMArg any]
+     error:[OCMArg anyObjectRef]];
+    
+    [[[_mockSocket expect] andReturnValue:@(YES)]
+     joinMulticastGroup:[OCMArg any]
+     error:[OCMArg anyObjectRef]];
+    
+    [[[_mockSocket expect] andReturnValue:@(YES)]
+     beginReceiving:[OCMArg anyObjectRef]];
+    
     
     // call
     [browser startBrowsingForServices:@"ssdp:all"];

@@ -57,21 +57,16 @@ typedef enum : NSUInteger {
 
 @implementation SSDPServiceBrowser
 
-- (id)initWithServiceType:(NSString *)serviceType onInterface:(NSString *)networkInterface {
+- (id)initWithInterface:(NSString *)networkInterface {
     self = [super init];
     if (self) {
-        _serviceType = [serviceType copy];
         _networkInterface = [networkInterface copy];
     }
     return self;
 }
 
-- (id)initWithServiceType:(NSString *)serviceType {
-    return [self initWithServiceType:serviceType onInterface:nil];
-}
-
 - (id)init {
-    return [self initWithServiceType:SSDPServiceType_All onInterface:nil];
+    return [self initWithInterface:nil];
 }
 
 
@@ -109,10 +104,20 @@ typedef enum : NSUInteger {
 
 
 - (void)startBrowsingForServices:(NSString *)serviceType {
+    
+    if (!_socket.isConnected) {
+        [self setupSocket];
+    }
+    
     NSString *searchHeader;
     searchHeader = [self _prepareSearchRequestWithServiceType:serviceType];
     NSData *d = [searchHeader dataUsingEncoding:NSUTF8StringEncoding];
-    
+
+    [_socket sendData:d toHost:SSDPMulticastGroupAddress port:SSDPMulticastUDPPort withTimeout:-1 tag:11];
+}
+
+- (void)setupSocket
+{
     // First call to _socket needs to be called by self for lazy instantiation
     [self.socket setIPv6Enabled:NO];
     
@@ -136,8 +141,6 @@ typedef enum : NSUInteger {
         [self _notifyDelegateWithError:err];
         return;
     }
-
-    [_socket sendData:d toHost:SSDPMulticastGroupAddress port:SSDPMulticastUDPPort withTimeout:-1 tag:11];
 }
 
 - (GCDAsyncUdpSocket *)socket

@@ -62,11 +62,6 @@
 @interface SSDPServiceBrowser : NSObject
 
 /**
- The UPnP service type.
- */
-@property(readonly, nonatomic) NSString *serviceType;
-
-/**
  The network interface to bind to.
  */
 @property(readonly, nonatomic) NSString *networkInterface;
@@ -77,23 +72,13 @@
 @property(assign, nonatomic) id<SSDPServiceBrowserDelegate> delegate;
 
 /**
- Initialize a new browser with a service type and network interface.
+ Initialize a new browser on a specific network interface.
 
- @param serviceType      The UPnP service type to search for.
  @param networkInterface The network interface to bind to.
 
  @return Returns a browser instance bound to a service type and network interface.
  */
-- (id)initWithServiceType:(NSString *)serviceType onInterface:(NSString *)networkInterface;
-
-/**
- Initialize a new browser with a service type.
-
- @param serviceType The UPnP service type to search for.
-
- @return Returns a browser instance bound to a service type and network interface.
- */
-- (id)initWithServiceType:(NSString *)serviceType;
+- (id)initWithInterface:(NSString *)networkInterface;
 
 /**
  Start browsing for UPnP services matching the browsers service type.
