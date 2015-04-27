@@ -39,7 +39,7 @@
  @param browser The current browser instance.
  @param error   An `NSError` detailing the error which occured.
  */
-- (void) ssdpBrowser:(SSDPServiceBrowser *)browser didNotStartBrowsingForServices:(NSError *)error;
+- (void)ssdpBrowser:(SSDPServiceBrowser *)browser didNotStartBrowsingForServices:(NSError *)error;
 
 /**
  Report a found `SSDPService`.
@@ -47,7 +47,7 @@
  @param browser The current browser instance.
  @param service The service which was found.
  */
-- (void) ssdpBrowser:(SSDPServiceBrowser *)browser didFindService:(SSDPService *)service;
+- (void)ssdpBrowser:(SSDPServiceBrowser *)browser didFindService:(SSDPService *)service;
 
 /**
  Report a removed `SSDPService`.
@@ -55,7 +55,7 @@
  @param browser The current browser instance.
  @param service The service which was found.
  */
-- (void) ssdpBrowser:(SSDPServiceBrowser *)browser didRemoveService:(SSDPService *)service;
+- (void)ssdpBrowser:(SSDPServiceBrowser *)browser didRemoveService:(SSDPService *)service;
 @end
 
 
@@ -84,7 +84,7 @@
 
  @return Returns a browser instance bound to a service type and network interface.
  */
-- (id) initWithServiceType:(NSString *)serviceType onInterface:(NSString *)networkInterface;
+- (id)initWithServiceType:(NSString *)serviceType onInterface:(NSString *)networkInterface;
 
 /**
  Initialize a new browser with a service type.
@@ -93,17 +93,17 @@
 
  @return Returns a browser instance bound to a service type and network interface.
  */
-- (id) initWithServiceType:(NSString *)serviceType;
+- (id)initWithServiceType:(NSString *)serviceType;
 
 /**
  Start browsing for UPnP services matching the browsers service type.
  */
-- (void) startBrowsingForServices;
+- (void)startBrowsingForServices;
 
 /**
  Stop browsing for UPnP services.
  */
-- (void) stopBrowsingForServices;
+- (void)stopBrowsingForServices;
 
 
 /**
@@ -111,6 +111,6 @@
 
  @return Returns a dictionary of interface names and addresses.
  */
-+ (NSDictionary *) availableNetworkInterfaces;
++ (NSDictionary *)availableNetworkInterfaces;
 
 @end

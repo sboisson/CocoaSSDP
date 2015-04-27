@@ -57,7 +57,7 @@ typedef enum : NSUInteger {
 
 @implementation SSDPServiceBrowser
 
-- (id) initWithServiceType:(NSString *)serviceType onInterface:(NSString *)networkInterface {
+- (id)initWithServiceType:(NSString *)serviceType onInterface:(NSString *)networkInterface {
     self = [super init];
     if (self) {
         _serviceType = [serviceType copy];
@@ -250,7 +250,7 @@ typedef enum : NSUInteger {
 }
 
 
-+ (NSDictionary *) availableNetworkInterfaces {
++ (NSDictionary *)availableNetworkInterfaces {
     NSMutableDictionary *addresses = [NSMutableDictionary dictionary];
     struct ifaddrs *interfaces = NULL;
     struct ifaddrs *ifa = NULL;
