@@ -86,7 +86,7 @@ typedef enum : NSUInteger {
     NSDictionary *bundleInfos = [[NSBundle mainBundle] infoDictionary];
     NSString *bundleExecutable = bundleInfos[(__bridge NSString *)kCFBundleExecutableKey] ?: bundleInfos[(__bridge NSString *)kCFBundleIdentifierKey];
     
-#if defined(__IPHONE_OS_VERSION_MIN_REQUIRED)
+#if defined(__IPHONE_OS_VERSION_MIN_REQUIRED) || defined(__TV_OS_VERSION_MIN_REQUIRED)
     userAgent = [NSString stringWithFormat:@"%@/%@ (%@; iOS %@) %@",
                  bundleExecutable,
                  (__bridge id)CFBundleGetValueForInfoDictionaryKey(CFBundleGetMainBundle(), kCFBundleVersionKey) ?: bundleInfos[(__bridge NSString *)kCFBundleVersionKey],
