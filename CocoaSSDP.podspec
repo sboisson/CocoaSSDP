@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = "CocoaSSDP"
-  s.version          = "0.1.0"
+  s.version          = "1.0.0"
   s.summary          = "Simple Service Discovery Protocol client library for Mac and iOS."
   s.homepage         = "https://github.com/sboisson/CocoaSSDP"
   s.description      = <<-DESC
