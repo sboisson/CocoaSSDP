@@ -51,9 +51,9 @@
     
     _services = [[NSMutableArray alloc] init];
 
-    _browser = [[SSDPServiceBrowser alloc] initWithServiceType:SSDPServiceType_All];
+    _browser = [[SSDPServiceBrowser alloc] init];
     _browser.delegate = self;
-    [_browser startBrowsingForServices];
+    [_browser startBrowsingForServices:SSDPServiceType_All];
 
     UIBarButtonItem *refreshButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh target:self action:@selector(refresh:)];
     self.navigationItem.rightBarButtonItem = refreshButton;
@@ -65,7 +65,7 @@
     [_browser stopBrowsingForServices];
     [_services removeAllObjects];
     [self.tableView reloadData];
-    [_browser startBrowsingForServices];
+    [_browser startBrowsingForServices:SSDPServiceType_All];
 }
 
 

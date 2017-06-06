@@ -22,3 +22,4 @@ DerivedData
 Example/Pods
 Example/Demos.xcworkspace
 Podfile.lock
+TestTarget/Pods

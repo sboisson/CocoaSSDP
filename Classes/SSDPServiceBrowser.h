@@ -26,26 +26,78 @@
 @class SSDPServiceBrowser;
 @class SSDPService;
 
+/**
+ The `SSDPServiceBrowserDelegate` protocol is adopted by an object that wishes
+ to be informed of devices that are found or removed during a browsers search
+ cycle.
+ */
 @protocol SSDPServiceBrowserDelegate
-- (void) ssdpBrowser:(SSDPServiceBrowser *)browser didNotStartBrowsingForServices:(NSError *)error;
-- (void) ssdpBrowser:(SSDPServiceBrowser *)browser didFindService:(SSDPService *)service;
-- (void) ssdpBrowser:(SSDPServiceBrowser *)browser didRemoveService:(SSDPService *)service;
+
+/**
+ Report the browser failed to start browsing for services.
+
+ @param browser The current browser instance.
+ @param error   An `NSError` detailing the error which occured.
+ */
+- (void)ssdpBrowser:(SSDPServiceBrowser *)browser didNotStartBrowsingForServices:(NSError *)error;
+
+/**
+ Report a found `SSDPService`.
+
+ @param browser The current browser instance.
+ @param service The service which was found.
+ */
+- (void)ssdpBrowser:(SSDPServiceBrowser *)browser didFindService:(SSDPService *)service;
+
+/**
+ Report a removed `SSDPService`.
+
+ @param browser The current browser instance.
+ @param service The service which was found.
+ */
+- (void)ssdpBrowser:(SSDPServiceBrowser *)browser didRemoveService:(SSDPService *)service;
 @end
 
 
 @interface SSDPServiceBrowser : NSObject
 
-@property(readonly, nonatomic) NSString *serviceType;
+/**
+ The network interface to bind to.
+ */
 @property(readonly, nonatomic) NSString *networkInterface;
+
+/**
+ A delegate to inform of browsing events.
+ */
 @property(assign, nonatomic) id<SSDPServiceBrowserDelegate> delegate;
 
-- (id) initWithServiceType:(NSString *)serviceType onInterface:(NSString *)networkInterface;
-- (id) initWithServiceType:(NSString *)serviceType;
+/**
+ Initialize a new browser on a specific network interface.
 
-- (void) startBrowsingForServices;
-- (void) stopBrowsingForServices;
+ @param networkInterface The network interface to bind to.
+
+ @return Returns a browser instance bound to a service type and network interface.
+ */
+- (id)initWithInterface:(NSString *)networkInterface;
+
+/**
+ Start browsing for UPnP services matching the browsers service type.
+
+ @param serviceType The UPnP service type to search for.
+ */
+- (void)startBrowsingForServices:(NSString *)serviceType;
+
+/**
+ Stop browsing for UPnP services.
+ */
+- (void)stopBrowsingForServices;
 
 
-+ (NSDictionary *) availableNetworkInterfaces;
+/**
+ Get a list of network interfaces available to the current device.
+
+ @return Returns a dictionary of interface names and addresses.
+ */
++ (NSDictionary *)availableNetworkInterfaces;
 
 @end

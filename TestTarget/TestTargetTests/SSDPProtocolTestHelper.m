@@ -1,6 +1,6 @@
 //
-//  SSDPService.h
-//  Copyright (c) 2014 Stephane Boisson
+//  SSDPServiceBrowserDelegateTestHelper.m
+//  Copyright (c) 2015 Paul Williamson
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"), to deal
@@ -21,47 +21,29 @@
 //  THE SOFTWARE.
 //
 
-#import <Foundation/Foundation.h>
+#import "SSDPProtocolTestHelper.h"
 
-/**
- A lightweight model class that describes an SSDP service, populated from headers
- returned by an SSDP search
- */
-@interface SSDPService : NSObject
+@implementation SSDPProtocolTestHelper
 
-/**
- The location of the service's description XML file
- */
-@property(readonly, nonatomic) NSURL *location;
+- (void)ssdpBrowser:(SSDPServiceBrowser *)browser didFindService:(SSDPService *)service
+{
+    if (self.foundServiceBlock) {
+        self.foundServiceBlock(browser, service);
+    }
+}
 
-/**
- The UPnP service type of the device
- */
-@property(readonly, nonatomic) NSString *serviceType;
+- (void)ssdpBrowser:(SSDPServiceBrowser *)browser didNotStartBrowsingForServices:(NSError *)error
+{
+    if (self.errorServiceBlock) {
+        self.errorServiceBlock(browser, error);
+    }
+}
 
-/**
- The services unique service name
- */
-@property(readonly, nonatomic) NSString *uniqueServiceName;
-
-/**
- The server description
- */
-@property(readonly, nonatomic) NSString *server;
-
-/**
- The services cache control max age
- */
-@property(readonly, nonatomic) NSNumber *cacheControlTime;
-
-/**
- Intialize a new instance
-
- @param headers The headers returned by the SSDP search response
-
- @return Returns a new `SSDPService` instance, populated from the headers
- dictionary
- */
-- (id)initWithHeaders:(NSDictionary *)headers;
+- (void)ssdpBrowser:(SSDPServiceBrowser *)browser didRemoveService:(SSDPService *)service
+{
+    if (self.removeServiceBlock) {
+        self.removeServiceBlock(browser, service);
+    }
+}
 
 @end

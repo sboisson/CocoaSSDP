@@ -50,68 +50,85 @@ typedef enum : NSUInteger {
 } SSDPMessageType;
 
 
-@interface SSDPServiceBrowser () {
-    GCDAsyncUdpSocket *_socket;
-}
-
+@interface SSDPServiceBrowser ()
+@property (strong, nonatomic) GCDAsyncUdpSocket *socket;
 @end
 
 
 @implementation SSDPServiceBrowser
 
-- (id) initWithServiceType:(NSString *)serviceType onInterface:(NSString *)networkInterface {
+- (id)initWithInterface:(NSString *)networkInterface {
     self = [super init];
     if (self) {
-        _serviceType = [serviceType copy];
         _networkInterface = [networkInterface copy];
     }
     return self;
 }
 
-- (id)initWithServiceType:(NSString *)serviceType {
-    return [self initWithServiceType:serviceType onInterface:nil];
-}
-
 - (id)init {
-    return [self initWithServiceType:SSDPServiceType_All onInterface:nil];
+    return [self initWithInterface:nil];
 }
 
 
-- (NSString *)_prepareSearchRequest {
-    NSString *userAgent = nil;
-    NSDictionary *bundleInfos = [[NSBundle mainBundle] infoDictionary];
-    NSString *bundleExecutable = bundleInfos[(__bridge NSString *)kCFBundleExecutableKey] ?: bundleInfos[(__bridge NSString *)kCFBundleIdentifierKey];
-#if defined(__IPHONE_OS_VERSION_MIN_REQUIRED)
-    userAgent = [NSString stringWithFormat:@"%@/%@ (%@; iOS %@) %@",
-                 bundleExecutable,
-                 (__bridge id)CFBundleGetValueForInfoDictionaryKey(CFBundleGetMainBundle(), kCFBundleVersionKey) ?: bundleInfos[(__bridge NSString *)kCFBundleVersionKey],
-                 [[UIDevice currentDevice] model],
-                 [[UIDevice currentDevice] systemVersion], SSDPVersionString];
-#elif defined(__MAC_OS_X_VERSION_MIN_REQUIRED)
-    userAgent = [NSString stringWithFormat:@"%@/%@ (Mac OS X %@) %@", bundleExecutable,
-                 bundleInfos[@"CFBundleShortVersionString"] ?: bundleInfos[(__bridge NSString *)kCFBundleVersionKey],
-                 [[NSProcessInfo processInfo] operatingSystemVersionString], SSDPVersionString];
-#endif
+- (NSString *)_prepareSearchRequestWithServiceType:(NSString *)serviceType {
+    NSString *userAgent = [self _userAgentString];
 
     return [NSString stringWithFormat:@"M-SEARCH * HTTP/1.1\r\n"
             "HOST: %@:%d\r\n"
             "MAN: \"ssdp:discover\"\r\n"
             "ST: %@\r\n"
             "MX: 3\r\n"
-            "USER-AGENT: %@/1\r\n\r\n\r\n", SSDPMulticastGroupAddress, SSDPMulticastUDPPort, _serviceType, userAgent];
+            "USER-AGENT: %@/1\r\n\r\n\r\n", SSDPMulticastGroupAddress, SSDPMulticastUDPPort, serviceType, userAgent];
+}
+
+- (NSString *)_userAgentString {
+    NSString *userAgent = nil;
+    NSDictionary *bundleInfos = [[NSBundle mainBundle] infoDictionary];
+    NSString *bundleExecutable = bundleInfos[(__bridge NSString *)kCFBundleExecutableKey] ?: bundleInfos[(__bridge NSString *)kCFBundleIdentifierKey];
+    
+#if defined(__IPHONE_OS_VERSION_MIN_REQUIRED) || defined(__TV_OS_VERSION_MIN_REQUIRED)
+    userAgent = [NSString stringWithFormat:@"%@/%@ (%@; iOS %@) %@",
+                 bundleExecutable,
+                 (__bridge id)CFBundleGetValueForInfoDictionaryKey(CFBundleGetMainBundle(), kCFBundleVersionKey) ?: bundleInfos[(__bridge NSString *)kCFBundleVersionKey],
+                 [[UIDevice currentDevice] model],
+                 [[UIDevice currentDevice] systemVersion], SSDPVersionString];
+    
+#elif defined(__MAC_OS_X_VERSION_MIN_REQUIRED)
+    userAgent = [NSString stringWithFormat:@"%@/%@ (Mac OS X %@) %@", bundleExecutable,
+                 bundleInfos[@"CFBundleShortVersionString"] ?: bundleInfos[(__bridge NSString *)kCFBundleVersionKey],
+                 [[NSProcessInfo processInfo] operatingSystemVersionString], SSDPVersionString];
+#endif
+    
+    return userAgent;
 }
 
 
-- (void)startBrowsingForServices {
-    NSData *d = [[self _prepareSearchRequest] dataUsingEncoding:NSUTF8StringEncoding];
+- (void)startBrowsingForServices:(NSString *)serviceType {
     
-    _socket = [[GCDAsyncUdpSocket alloc] initWithDelegate:self delegateQueue:dispatch_get_main_queue()];
-    [_socket setIPv6Enabled:NO];
+    if (!_socket.isConnected) {
+        [self setupSocket];
+    }
+    
+    NSString *searchHeader;
+    searchHeader = [self _prepareSearchRequestWithServiceType:serviceType];
+    NSData *d = [searchHeader dataUsingEncoding:NSUTF8StringEncoding];
+
+    [_socket sendData:d
+               toHost:SSDPMulticastGroupAddress
+                 port:SSDPMulticastUDPPort
+          withTimeout:-1
+                  tag:11];
+}
+
+- (void)setupSocket
+{
+    // First call to _socket needs to be called by self for lazy instantiation
+    [self.socket setIPv6Enabled:NO];
     
     NSError *err = nil;
 
     NSDictionary *interfaces = [SSDPServiceBrowser availableNetworkInterfaces];
-    NSData *sourceAddress = _networkInterface? [interfaces objectForKey:_networkInterface] : nil;
+    NSData *sourceAddress = _networkInterface? interfaces[_networkInterface] : nil;
     if( !sourceAddress ) sourceAddress = [[interfaces allValues] firstObject];
 
     if(![_socket bindToAddress:sourceAddress error:&err]) {
@@ -128,8 +145,19 @@ typedef enum : NSUInteger {
         [self _notifyDelegateWithError:err];
         return;
     }
+}
 
-    [_socket sendData:d toHost:SSDPMulticastGroupAddress port:SSDPMulticastUDPPort withTimeout:-1 tag:11];
+- (GCDAsyncUdpSocket *)socket
+{
+    
+    if (_socket) {
+        return _socket;
+    }
+    
+    _socket = [[GCDAsyncUdpSocket alloc]
+               initWithDelegate:self delegateQueue:dispatch_get_main_queue()];
+    
+    return _socket;
 }
 
 - (void)stopBrowsingForServices {
@@ -155,14 +183,25 @@ typedef enum : NSUInteger {
       fromAddress:(NSData *)address withFilterContext:(id)filterContext
 {
     NSString *msg = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+    
     if( msg ) {
         NSDictionary *headers = [self _parseHeadersFromMessage:msg];
-        if( [headers objectForKey:SSDPResponseStatusKey] ) {
-            SSDPService *service = [[SSDPService alloc] initWithHeaders:headers];
+        SSDPService *service = [[SSDPService alloc] initWithHeaders:headers];
+        
+        if( [headers[SSDPResponseStatusKey] isEqualToString:@"200"] ) {
             [self _notifyDelegateWithFoundService:service];
+            
+        } else if ( [headers[SSDPRequestMethodKey] isEqualToString:@"NOTIFY"] ) {
+            NSString *nts = headers[@"nts"];
+            
+            if ( [nts isEqualToString:@"ssdp:alive"] ) {
+                [self _notifyDelegateWithFoundService:service];
+                
+            } else if ([nts isEqualToString:@"ssdp:byebye"]) {
+                [self _notifyDelegateWithRemovedService:service];
+            }
         }
-    }
-    else {
+    } else {
         NSString *host = nil;
         uint16_t port = 0;
         [GCDAsyncUdpSocket getHost:&host port:&port fromAddress:address];
@@ -174,9 +213,12 @@ typedef enum : NSUInteger {
 
 - (NSMutableDictionary *)_parseHeadersFromMessage:(NSString *)message {
     NSMutableDictionary *headers = [NSMutableDictionary dictionary];
-    NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"^([a-z0-9-]+): *(.+)$"
-                                                                           options:NSRegularExpressionCaseInsensitive|NSRegularExpressionAnchorsMatchLines
-                                                                             error:nil];
+    NSString *pattern = @"^([a-z0-9-]+): *(.+)$";
+    NSRegularExpression *regex = [NSRegularExpression
+                                  regularExpressionWithPattern:pattern
+                                  options:NSRegularExpressionCaseInsensitive|
+                                  NSRegularExpressionAnchorsMatchLines
+                                  error:nil];
 
     __block SSDPMessageType type = SSDPUnknownMessage;
     
@@ -200,13 +242,12 @@ typedef enum : NSUInteger {
             }
         }
         else {
-            [regex enumerateMatchesInString:line options:0 range:NSMakeRange(0, line.length)
-                                 usingBlock:^(NSTextCheckingResult *result, NSMatchingFlags flags, BOOL *stop) {
-                                     if( result.numberOfRanges == 3 ) {
-                                         [headers setObject:[line substringWithRange:[result rangeAtIndex:2]]
-                                                     forKey:[[line substringWithRange:[result rangeAtIndex:1]] lowercaseString]];
-                                     }
-                                 }];
+            [regex enumerateMatchesInString:line options:0 range:NSMakeRange(0, line.length) usingBlock:^(NSTextCheckingResult *result, NSMatchingFlags flags, BOOL *stop) {
+                if( result.numberOfRanges == 3 ) {
+                    [headers setObject:[line substringWithRange:[result rangeAtIndex:2]]
+                                forKey:[[line substringWithRange:[result rangeAtIndex:1]] lowercaseString]];
+                }
+            }];
         }
     }];
     return headers;
@@ -231,8 +272,17 @@ typedef enum : NSUInteger {
     });
 }
 
+- (void)_notifyDelegateWithRemovedService:(SSDPService *)service
+{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        @autoreleasepool {
+            [_delegate ssdpBrowser:self didRemoveService:service];
+        }
+    });
+}
 
-+ (NSDictionary *) availableNetworkInterfaces {
+
++ (NSDictionary *)availableNetworkInterfaces {
     NSMutableDictionary *addresses = [NSMutableDictionary dictionary];
     struct ifaddrs *interfaces = NULL;
     struct ifaddrs *ifa = NULL;
