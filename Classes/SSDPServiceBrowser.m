@@ -50,7 +50,7 @@ typedef enum : NSUInteger {
 } SSDPMessageType;
 
 
-@interface SSDPServiceBrowser ()
+@interface SSDPServiceBrowser <GCDAsyncUdpSocketDelegate> ()
 @property (strong, nonatomic) GCDAsyncUdpSocket *socket;
 @end
 
