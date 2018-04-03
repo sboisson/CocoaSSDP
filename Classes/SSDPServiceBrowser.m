@@ -54,6 +54,8 @@ typedef enum : NSUInteger {
 @property (strong, nonatomic) GCDAsyncUdpSocket *socket;
 @end
 
+@interface SSDPServiceBrowser (Socket) <GCDAsyncUdpSocketDelegate>
+@end
 
 @implementation SSDPServiceBrowser
 
